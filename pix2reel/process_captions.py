@@ -2,6 +2,30 @@ from openai import OpenAI
 import os
 
 def shorten_captions_and_create_hashtags(input_text, api_key=None):
+    """
+    Summarize a long text into a concise caption and generate a related hashtag using OpenAI.
+    
+    This function takes a long input text and uses the OpenAI API to:
+    1. Shorten the text to under 50 characters
+    2. Create a relevant hashtag under 20 characters
+    
+    Args:
+        input_text (str): The original text to be summarized
+        api_key (str, optional): OpenAI API key. If not provided, 
+            the function will attempt to read from the OPENAI_API_KEY environment variable.
+    
+    Returns:
+        tuple[str, str]: A tuple containing:
+            - Shortened caption (str)
+            - Generated hashtag (str), prefixed with '#' or empty string if no hashtag created
+    
+    Raises:
+        ValueError: If no OpenAI API key is found in arguments or environment
+    
+    Note:
+        - If input text is 50 characters or less, it is returned as-is
+        - Requires an active OpenAI API subscription
+    """
     # Check if the input text is too long
     if len(input_text) <= 50:
         return input_text, ""
