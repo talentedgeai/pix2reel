@@ -38,9 +38,11 @@ def run_reel_assembly(
         base_duration = 3.0  # 3 seconds per image
         segment_durations = [0.0] + [base_duration * (i+1) for i in range(len(images))]
 
-    # If segment durations is not the same length as images, raise error
-    if len(segment_durations) != len(images) + 1:
+    # If segment durations is not the same length as images, raise error or truncate it
+    if len(segment_durations) < len(images) + 1:
         raise ValueError("Number of segment durations must be equal to number of images + 1")
+    elif len(segment_durations) > len(images) + 1:
+        segment_durations = segment_durations[:len(images)+1]
     
     # Generate FFmpeg command
     command = _assemble_ffmpeg_commands(images, texts, audio_file, output_video, segment_durations)

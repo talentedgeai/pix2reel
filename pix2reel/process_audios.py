@@ -1,6 +1,6 @@
 import librosa
 
-def get_segments_for_music(music_file, amplitude_sensitivity, time_sentitivity):
+def get_segments_for_music(music_file, amplitude_sensitivity=0.5, time_sentitivity=0.5):
     y, sr = librosa.load(music_file)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr)
     # Detect onsets with a higher threshold
