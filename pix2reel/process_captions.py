@@ -3,38 +3,35 @@ import os
 
 def shorten_captions_and_create_hashtags(input_text, api_key=None):
     """
-    Summarize a long text into a concise caption and generate a related hashtag using OpenAI.
-    
-    This function takes a long input text and uses the OpenAI API to:
-    1. Shorten the text to under 50 characters
-    2. Create a relevant hashtag under 20 characters
+    Summarize text(s) into concise captions and generate related hashtags using OpenAI.
     
     Args:
-        input_text (str): The original text to be summarized
+        input_text (str or list[str]): The original text(s) to be summarized
         api_key (str, optional): OpenAI API key. If not provided, 
             the function will attempt to read from the OPENAI_API_KEY environment variable.
     
     Returns:
-        tuple[str, str]: A tuple containing:
-            - Shortened caption (str)
-            - Generated hashtag (str), prefixed with '#' or empty string if no hashtag created
+        A list of strings, each containing summary and hashtag
     
     Raises:
         ValueError: If no OpenAI API key is found in arguments or environment
-    
-    Note:
-        - If input text is 50 characters or less, it is returned as-is
-        - Requires an active OpenAI API subscription
     """
-    # Check if the input text is too long
-    if len(input_text) <= 50:
-        return input_text, ""
-
-    # Define the prompt for summarizing and generating a hashtag
+    # Handle single string input for backward compatibility
+    if isinstance(input_text, str):
+        # Prepare for single text processing
+        texts = [input_text]
+    else:
+        # Handle list input
+        texts = input_text
+        
+    # Prepare the prompt for batch processing
     prompt = (
-        f"Summarize the following text into fewer than 50 characters and generate a hashtag under 20 characters:\n\n"
-        f"Text: {input_text}\n"
-        f"Summary:"
+        "For each text, provide a summary under 50 characters and a hashtag under 20 characters. "
+        "Format your response as:\n"
+        "Text 1: [Summary 1] #[Hashtag 1]\n"
+        "Text 2: [Summary 2] #[Hashtag 2]\n"
+        "...\n\n"
+        + "\n".join(f"Text {i+1}: {text}" for i, text in enumerate(texts))
     )
 
     # Use provided API key, or fall back to environment variable
@@ -52,12 +49,21 @@ def shorten_captions_and_create_hashtags(input_text, api_key=None):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=50,
+        max_completion_tokens=200,
         temperature=0.7,
     )
 
     # Extract the response text
     result_text = response.choices[0].message.content.strip()
-    summary, hashtag = result_text.split("#") if "#" in result_text else (result_text, "")
-
-    return summary.strip(), f"#{hashtag.strip()}" if hashtag else ""
+    
+    # Parse the results
+    processed_results = []
+    for line in result_text.split('\n'):
+        if ':' in line:
+            parts = line.split(':', 1)[1].strip().split('#')
+            summary = parts[0].strip()
+            hashtag = f"#{parts[1].strip()}" if len(parts) > 1 else ""
+            processed_results.append(f"{summary} {hashtag}".strip())
+    
+    # Return based on input type
+    return processed_results
