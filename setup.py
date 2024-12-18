@@ -11,6 +11,7 @@ setup(
     url="https://github.com/username/my_library",  # URL of your library
     packages=find_packages(),        # Automatically find all packages in the library
     install_requires=[               # Dependencies required for installation
+        "librosa==0.10.2",
         "openai==1.57.1",
         "requests>=2.25.1"
     ],
