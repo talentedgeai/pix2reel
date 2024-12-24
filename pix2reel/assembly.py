@@ -5,8 +5,8 @@ from typing import List
 def run_reel_assembly(
     images: List[str], 
     texts: List[str], 
-    audio_file: str, 
-    output_video: str, 
+    audio_file: str = None, 
+    output_video: str = "output_video.mp4", 
     segment_durations: List[float] = None
 ):
     """
@@ -30,8 +30,10 @@ def run_reel_assembly(
     if not all(os.path.exists(img) for img in images):
         raise FileNotFoundError("One or more image files do not exist")
     
-    if not os.path.exists(audio_file):
-        raise FileNotFoundError(f"Audio file {audio_file} not found")
+    if audio_file:
+        if not os.path.exists(audio_file):
+            audio_file = None
+            print("Use silent audio background because cannot file audio file")
     
     # If no custom timings, generate default
     if segment_durations is None:
@@ -73,11 +75,16 @@ def _assemble_ffmpeg_commands(
             "-t", f"{segment_durations[i + 1] - segment_durations[i]}",
             "-i", images[i]
         ])
-
-    # Input the audio file
-    command.extend([
-        "-i", audio_file
-    ])
+    if audio_file:
+        # Input the audio file
+        command.extend([
+            "-i", audio_file
+        ])
+    else:
+        # Use silent audio background
+        command.extend([
+            "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"
+        ])
 
     # Generate filter complex string
     filter_complex_str = _generate_filter_complex_string(texts, images, segment_durations)
