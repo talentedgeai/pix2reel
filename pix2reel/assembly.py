@@ -1,5 +1,7 @@
+import requests
 import subprocess
 import os
+import shutil
 from typing import List
 
 def run_reel_assembly(
@@ -7,7 +9,8 @@ def run_reel_assembly(
     texts: List[str], 
     audio_file: str = None, 
     output_video: str = "output_video.mp4", 
-    segment_durations: List[float] = None
+    segment_durations: List[float] = None,
+    mode: str = "directory"
 ):
     """
     Generate a reel video from images with text overlays and background audio.
@@ -18,11 +21,27 @@ def run_reel_assembly(
         audio_file (str): Path to background audio file
         output_video (str): Path for output video
         segment_durations (List[float], optional): Custom timing for each image. Defaults to None.
+        mode (str): can be directory or url. If it's url then there will be a download steps.
     
     Raises:
         ValueError: If inputs are invalid
         subprocess.CalledProcessError: If FFmpeg command fails
     """
+    if mode == "url":
+        final_images = []
+        # Temporary directory to store images
+        temp_dir = "temp_images"
+        os.makedirs(temp_dir, exist_ok=True)
+
+        # Download images
+        for i, url in enumerate(images):
+            response = requests.get(url)
+            final_images.append(os.path.join(temp_dir, f"image_{i}.jpg"))
+            with open(os.path.join(temp_dir, f"image_{i}.jpg"), "wb") as f:
+                f.write(response.content)
+
+        images = final_images
+
     # Validate inputs
     if len(images) != len(texts):
         raise ValueError("Number of images must match number of texts")
@@ -52,9 +71,13 @@ def run_reel_assembly(
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
         print(f"Reel generated successfully: {output_video}")
+        if mode == "url":
+            shutil.rmtree(temp_dir)
     except subprocess.CalledProcessError as e:
         error_message = f"Error generating reel: {e.stderr}"
         print(error_message)
+        if mode == "url" & os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
         raise RuntimeError(error_message) from e
 
 
