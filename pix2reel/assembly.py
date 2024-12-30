@@ -71,7 +71,7 @@ def run_reel_assembly(
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
         print(f"Reel generated successfully: {output_video}")
-        if mode == "url":
+        if mode == "url" & os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
     except subprocess.CalledProcessError as e:
         error_message = f"Error generating reel: {e.stderr}"
