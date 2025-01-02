@@ -2,7 +2,46 @@ import requests
 import subprocess
 import os
 import shutil
+import logging
 from typing import List
+
+logger = logging.getLogger("image_downloader")
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+def download_images(images, temp_dir):
+    final_images = []
+
+    for i, url in enumerate(images):
+        try:
+            response = requests.get(url, timeout=10)  # Set a timeout for reliability
+            
+            # Check for HTTP errors
+            if response.status_code != 200:
+                logger.error("Failed to download %s: HTTP %s", url, response.status_code)
+                raise RuntimeError(f"Failed to download {url}: HTTP {response.status_code}")
+            
+            # Construct file path
+            file_path = os.path.join(temp_dir, f"image_{i}.jpg")
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+
+            # Verify the file is not empty
+            if os.path.getsize(file_path) == 0:
+                logger.error("Downloaded file is empty: %s", url)
+                raise RuntimeError(f"Downloaded file is empty: {url}")
+
+            final_images.append(file_path)
+
+        except Exception as e:
+            logger.error("Error downloading image %s: %s", url, e)
+            raise  # Re-raise the exception to handle it upstream
+
+    return final_images
+
 
 def run_reel_assembly(
     images: List[str], 
@@ -33,12 +72,7 @@ def run_reel_assembly(
         temp_dir = "temp_images"
         os.makedirs(temp_dir, exist_ok=True)
 
-        # Download images
-        for i, url in enumerate(images):
-            response = requests.get(url)
-            final_images.append(os.path.join(temp_dir, f"image_{i}.jpg"))
-            with open(os.path.join(temp_dir, f"image_{i}.jpg"), "wb") as f:
-                f.write(response.content)
+        final_images = download_images(images, temp_dir)
 
         images = final_images
 
@@ -52,7 +86,7 @@ def run_reel_assembly(
     if audio_file:
         if not os.path.exists(audio_file):
             audio_file = None
-            print("Use silent audio background because cannot file audio file")
+            logger.info("Use silent audio background because cannot file audio file")
     
     # If no custom timings, generate default
     if segment_durations is None:
@@ -71,12 +105,12 @@ def run_reel_assembly(
     try:
         subprocess.run(command, check=True, capture_output=True, text=True)
         print(f"Reel generated successfully: {output_video}")
-        if mode == "url" & os.path.exists(temp_dir):
+        if (mode == "url") & os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
     except subprocess.CalledProcessError as e:
         error_message = f"Error generating reel: {e.stderr}"
         print(error_message)
-        if mode == "url" & os.path.exists(temp_dir):
+        if (mode == "url") & (os.path.exists(temp_dir)):
             shutil.rmtree(temp_dir)
         raise RuntimeError(error_message) from e
 
