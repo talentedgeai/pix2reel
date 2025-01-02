@@ -4,6 +4,7 @@ import os
 import shutil
 import logging
 from typing import List
+from process_audios import get_segments_for_music
 
 logger = logging.getLogger("image_downloader")
 logger.setLevel(logging.DEBUG)
@@ -115,8 +116,12 @@ def run_reel_assembly(
             logger.info("Use silent audio background because cannot file audio file")
     
     # If no custom timings, generate default
-    if segment_durations is None:
-        base_duration = 3.0  # 3 seconds per image
+    try:
+        if segment_durations is None:
+            segment_durations = get_segments_for_music(audio_file, 0.5, 0.5)
+    except:
+        logger.info("Failed to get segment for musics, using default")
+        base_duration = 3.0
         segment_durations = [0.0] + [base_duration * (i+1) for i in range(len(images))]
 
     # If segment durations is not the same length as images, raise error or truncate it
