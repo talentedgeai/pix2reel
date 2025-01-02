@@ -4,7 +4,7 @@ import os
 import shutil
 import logging
 from typing import List
-from process_audios import get_segments_for_music
+from .process_audios import get_segments_for_music
 
 logger = logging.getLogger("image_downloader")
 logger.setLevel(logging.DEBUG)
