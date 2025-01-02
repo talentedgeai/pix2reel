@@ -12,8 +12,6 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-MUSIC_DEFAULT = "https://kkhkvzjpcnivhhutxled.supabase.co/storage/v1/object/sign/challenge/music1.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJjaGFsbGVuZ2UvbXVzaWMxLm1wMyIsImlhdCI6MTczNTgwOTAzNCwiZXhwIjoxNzY3MzQ1MDM0fQ.dy76I0r31Gs7-bi1X8GQLwzsgpEqzcojGoN2xceu_1g&t=2025-01-02T09%3A10%3A34.145Z"
-
 def download_images(images, temp_dir):
     final_images = []
 
@@ -100,7 +98,7 @@ def run_reel_assembly(
         os.makedirs(temp_dir, exist_ok=True)
 
         final_images = download_images(images, temp_dir)
-        audio_file = download_music(MUSIC_DEFAULT, temp_dir)
+        audio_file = download_music(audio_file, temp_dir)
 
         images = final_images
 
