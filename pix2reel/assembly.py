@@ -5,8 +5,7 @@ import shutil
 import logging
 from typing import List
 
-if logger is None:
-    logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 def run_reel_assembly(
     images: List[str], 
