@@ -2,7 +2,11 @@ import requests
 import subprocess
 import os
 import shutil
+import logging
 from typing import List
+
+if logger is None:
+    logger = logging.getLogger(__name__)
 
 def run_reel_assembly(
     images: List[str], 
@@ -35,12 +39,12 @@ def run_reel_assembly(
 
         # Download images
         for i, url in enumerate(images):
-            print("Downloading :", url)
+            logger.info("Downloading :", url)
             response = requests.get(url)
             final_images.append(os.path.join(temp_dir, f"image_{i}.jpg"))
             with open(os.path.join(temp_dir, f"image_{i}.jpg"), "wb") as f:
                 f.write(response.content)
-            print("Downloaded :", url)
+            logger.info("Downloaded :", url)
 
         images = final_images
 
@@ -54,7 +58,7 @@ def run_reel_assembly(
     if audio_file:
         if not os.path.exists(audio_file):
             audio_file = None
-            print("Use silent audio background because cannot file audio file")
+            logger.info("Use silent audio background because cannot file audio file")
     
     # If no custom timings, generate default
     if segment_durations is None:
