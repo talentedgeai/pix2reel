@@ -5,7 +5,45 @@ import shutil
 import logging
 from typing import List
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("image_downloader")
+logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+def download_images(images, temp_dir):
+    final_images = []
+
+    for i, url in enumerate(images):
+        try:
+            logger.info("Downloading: %s", url)
+            response = requests.get(url, timeout=10)  # Set a timeout for reliability
+            
+            # Check for HTTP errors
+            if response.status_code != 200:
+                logger.error("Failed to download %s: HTTP %s", url, response.status_code)
+                raise RuntimeError(f"Failed to download {url}: HTTP {response.status_code}")
+            
+            # Construct file path
+            file_path = os.path.join(temp_dir, f"image_{i}.jpg")
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+
+            # Verify the file is not empty
+            if os.path.getsize(file_path) == 0:
+                logger.error("Downloaded file is empty: %s", url)
+                raise RuntimeError(f"Downloaded file is empty: {url}")
+
+            logger.info("Downloaded: %s", url)
+            final_images.append(file_path)
+
+        except Exception as e:
+            logger.error("Error downloading image %s: %s", url, e)
+            raise  # Re-raise the exception to handle it upstream
+
+    return final_images
+
 
 def run_reel_assembly(
     images: List[str], 
@@ -36,14 +74,7 @@ def run_reel_assembly(
         temp_dir = "temp_images"
         os.makedirs(temp_dir, exist_ok=True)
 
-        # Download images
-        for i, url in enumerate(images):
-            logger.info("Downloading :", url)
-            response = requests.get(url)
-            final_images.append(os.path.join(temp_dir, f"image_{i}.jpg"))
-            with open(os.path.join(temp_dir, f"image_{i}.jpg"), "wb") as f:
-                f.write(response.content)
-            logger.info("Downloaded :", url)
+        final_images = download_images(images, temp_dir)
 
         images = final_images
 
