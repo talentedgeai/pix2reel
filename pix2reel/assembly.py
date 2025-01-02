@@ -12,6 +12,8 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+MUSIC_DEFAULT = "https://kkhkvzjpcnivhhutxled.supabase.co/storage/v1/object/sign/challenge/music1.mp3?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJjaGFsbGVuZ2UvbXVzaWMxLm1wMyIsImlhdCI6MTczNTgwOTAzNCwiZXhwIjoxNzY3MzQ1MDM0fQ.dy76I0r31Gs7-bi1X8GQLwzsgpEqzcojGoN2xceu_1g&t=2025-01-02T09%3A10%3A34.145Z"
+
 def download_images(images, temp_dir):
     final_images = []
 
@@ -41,6 +43,31 @@ def download_images(images, temp_dir):
             raise  # Re-raise the exception to handle it upstream
 
     return final_images
+
+
+def download_music(music_url, temp_dir):
+    try:
+        response = requests.get(music_url, timeout=10)  # Set a timeout for reliability
+        # Check for HTTP errors
+        if response.status_code != 200:
+            logger.error("Failed to download %s: HTTP %s", music_url, response.status_code)
+            raise RuntimeError(f"Failed to download {music_url}: HTTP {response.status_code}")
+        
+        # Construct file path
+        file_path = os.path.join(temp_dir, f"music.mp3")
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+
+        # Verify the file is not empty
+        if os.path.getsize(file_path) == 0:
+            logger.error("Downloaded file is empty: %s", music_url)
+            raise RuntimeError(f"Downloaded file is empty: {music_url}")
+        
+    except Exception as e:
+        logger.error("Error downloading image %s: %s", music_url, e)
+        raise  # Re-raise the exception to handle it upstream
+    
+    return file_path
 
 
 def run_reel_assembly(
@@ -73,6 +100,7 @@ def run_reel_assembly(
         os.makedirs(temp_dir, exist_ok=True)
 
         final_images = download_images(images, temp_dir)
+        audio_file = download_music(MUSIC_DEFAULT, temp_dir)
 
         images = final_images
 
