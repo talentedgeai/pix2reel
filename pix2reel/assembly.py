@@ -17,7 +17,6 @@ def download_images(images, temp_dir):
 
     for i, url in enumerate(images):
         try:
-            logger.info("Downloading: %s", url)
             response = requests.get(url, timeout=10)  # Set a timeout for reliability
             
             # Check for HTTP errors
@@ -35,7 +34,6 @@ def download_images(images, temp_dir):
                 logger.error("Downloaded file is empty: %s", url)
                 raise RuntimeError(f"Downloaded file is empty: {url}")
 
-            logger.info("Downloaded: %s", url)
             final_images.append(file_path)
 
         except Exception as e:
