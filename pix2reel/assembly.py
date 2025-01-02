@@ -35,10 +35,12 @@ def run_reel_assembly(
 
         # Download images
         for i, url in enumerate(images):
+            print("Downloading :", url)
             response = requests.get(url)
             final_images.append(os.path.join(temp_dir, f"image_{i}.jpg"))
             with open(os.path.join(temp_dir, f"image_{i}.jpg"), "wb") as f:
                 f.write(response.content)
+            print("Downloaded :", url)
 
         images = final_images
 
@@ -76,7 +78,7 @@ def run_reel_assembly(
     except subprocess.CalledProcessError as e:
         error_message = f"Error generating reel: {e.stderr}"
         print(error_message)
-        if mode == "url" & os.path.exists(temp_dir):
+        if (mode == "url") & (os.path.exists(temp_dir)):
             shutil.rmtree(temp_dir)
         raise RuntimeError(error_message) from e
 
