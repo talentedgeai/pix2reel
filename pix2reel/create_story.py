@@ -78,13 +78,12 @@ class TourStoryGenerator:
         Tour Notes: {tour_notes}
 
         Important Guidelines:
-
-        1. Place greater emphasis on the details in the "Tour Notes," ensuring that no critical information from this section is missed.\n
-        2. While it's acceptable to incorporate moments of negativity (e.g., challenges or setbacks during the trip), always find a way to twist these into a positive, inspiring, or uplifting resolution.\n
-        3. Stay within the scope of the provided "Tour Schedule" and "Tour Notes," ensuring creativity enhances the narrative without deviating from the core details provided.\n
-        4. Adhere strictly to the word limit of {story_length} words. The story should not exceed or fall short of this limit. Focus on concise and impactful descriptions to maintain brevity while capturing the essence of the experience.\n
-
-        The story should vividly capture the essence of the tour experience, engaging the reader with immersive descriptions and emotions while remaining grounded in the details."
+        1. Highlight the "Tour Notes" – They’re the star! Don’t miss any key details from this section.
+        2. If there were any hiccups during the trip, that’s okay! Share them, but always spin it into a positive or uplifting takeaway.
+        3. Stick to the facts in the "Tour Schedule" and "Tour Notes" while keeping the story creative and exciting. Don’t go off-track!
+        4. Word limit is {story_length}. Keep it short, snappy, and on point.
+        
+        Make the story feel real and relatable, like something you'd share on Instagram or TikTok. Use vivid descriptions and keep it fresh, fun, and full of energy!"
 
         """
 
@@ -130,7 +129,73 @@ class TourStoryGenerator:
         
         return self.generate_tour_story(tour_schedule, tour_notes, story_length)
 
-def main():
+    def generate_location_stories(self, tour_schedule: str, tour_notes: str, story_length: int = 100) -> str:
+        """
+        Generate each story for many locations.
+        
+        Args:
+            tour_schedule (str): Details of the whole tour schedule
+            tour_notes (str): Additional notes about the tour, each line corresponding to a location formatted as location_id;location_notes, each location in a different line
+            story_length (int, optional): Desired story length for each location in words. Defaults to 100.
+        
+        Returns:
+            str: Generated story about the tour
+        """
+        prompt = f"""
+        Create a precisely {story_length}-word creative story for each location based on the following tour details:
+
+        Tour Schedule: {tour_schedule}
+        Tour Notes: {tour_notes}
+
+        Notes Format:
+        Each line in "Tour Notes" corresponds to a single location and is formatted as:
+        location_id;location_name;location_notes
+        Example: 1;Hanoi;Explored the bustling Old Quarter and sampled local street food.
+
+        Important Guidelines:
+        1. Generate one story for each location in the "Tour Notes." 
+        2. Highlight the "location_notes" for each location – They’re the star! Don’t miss any key details from this section.
+        3. If there were any hiccups at a location, that’s okay! Share them, but always spin it into a positive or uplifting takeaway.
+        4. Stick to the facts in the "Tour Schedule" and "location_notes" while keeping each story creative and exciting. Don’t go off-track!
+        5. Word limit is {story_length} per location. Keep it short, snappy, and on point.
+
+        Output Format:
+        Return the result as a JSON list, where each item is a dictionary with:
+        - "locationId": The location ID from the "Tour Notes."
+        - "story": A {story_length}-word creative story for the corresponding location.
+
+        Example Output:
+        [
+            {{"locationId": 1, "story": "Exploring Hanoi's Old Quarter was a feast for the senses..."}},
+            {{"locationId": 2, "story": "A peaceful afternoon in Halong Bay began with a gentle..."}}
+        ]
+
+        Make the stories feel real and relatable, like something you'd share on Instagram or TikTok. Use vivid descriptions and keep them fresh, fun, and full of energy!
+        """
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a creative storyteller who can weave narratives from travel experiences."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=200*tour_notes.count("\n")  # Slightly higher to ensure we get close to 100 words
+            )
+            
+            story = response.choices[0].message.content.strip()
+            cost = {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens
+            }
+            return story, cost
+        
+        except Exception as e:
+            print(f"Error generating story: {e}")
+            return "", {}
+
+def example_generate_tour_story():
     # Example usage
     generator = TourStoryGenerator()
     
@@ -156,5 +221,54 @@ def main():
     # story = generator.generate_story_from_file('tour_schedule.txt', 'tour_notes.txt')
     # print(story)
 
-if __name__ == "__main__":
-    main()
+def example_generate_location_stories():
+    # Example usage
+    generator = TourStoryGenerator()
+    tour_schedule = """
+    Hanoi Vespa Food Tour Itinerary
+    8:30 AM: Hotel pick-up. Your guide arrives on a vintage Vespa to start your culinary journey through Hanoi’s vibrant streets. Brief introduction and safety instructions before departing.
+    9:00 AM: Pho Ba Muoi on Hang Bai Street. There will be Pho Bo (beef pho) and Pho Ga (chicken pho). Pho Ga will is light-hearted, while Pho Bo is more savory. Guests can enjoy the hot bowl of pho, drink one cup of tea, and soak in the morning atmosphere of Hanoi.
+    10:30 AM: Bun Cha Huong Lien. Famed for being Obama's lunch spot with Anthony Bourdain when he visited Hanoi for a business trip. Relish a plate of Hanoi's iconic Bun Cha with grilled pork patties, fresh vermicelli, and dipping sauce at a family-run restaurant.
+    12:00 PM: Hotel drop-off. Return safely to your hotel with a heart full of memories and a belly full of Hanoi's finest flavors.
+    """
+
+    user_challenges = [
+        {
+            "index": 0,
+            "locationId": "efb4d749-35e5-4296-9b99-092a7270db73",
+            "locationName": "Street food Pho",
+            "userMediaSubmission": [
+                "https://kkhkvzjpcnivhhutxled.supabase.co/storage/v1/object/sign/challenge/88c59643-d03e-466b-a64a-2eaba98d75d4/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=0/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=0_47ae2ad00b41c14d782744a11d1e73ef.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJjaGFsbGVuZ2UvODhjNTk2NDMtZDAzZS00NjZiLWE2NGEtMmVhYmE5OGQ3NWQ0L2UyZDM1N2JjLTAyNDMtNGI5Yy05YzVlLTBjMjk0MGZlZTU4N2lkPTAvZTJkMzU3YmMtMDI0My00YjljLTljNWUtMGMyOTQwZmVlNTg3aWQ9MF80N2FlMmFkMDBiNDFjMTRkNzgyNzQ0YTExZDFlNzNlZi5qcGciLCJpYXQiOjE3MzYzMzU1NzcsImV4cCI6MTc2Nzg3MTU3N30.3-o8mGzwj8SOy8VjCe2fw5gsckXK0gmuFN9xlculQSQ",
+                "https://kkhkvzjpcnivhhutxled.supabase.co/storage/v1/object/sign/challenge/88c59643-d03e-466b-a64a-2eaba98d75d4/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=1/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=1_5c4730da0710b8e0848fbca112224331.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJjaGFsbGVuZ2UvODhjNTk2NDMtZDAzZS00NjZiLWE2NGEtMmVhYmE5OGQ3NWQ0L2UyZDM1N2JjLTAyNDMtNGI5Yy05YzVlLTBjMjk0MGZlZTU4N2lkPTEvZTJkMzU3YmMtMDI0My00YjljLTljNWUtMGMyOTQwZmVlNTg3aWQ9MV81YzQ3MzBkYTA3MTBiOGUwODQ4ZmJjYTExMjIyNDMzMS5qcGciLCJpYXQiOjE3MzYzMzU1ODIsImV4cCI6MTc2Nzg3MTU4Mn0.J3y8rIS1dCrHu3AhrivtlJ26XjB_h1fG8rjXpDjcHBM"
+            ],
+            "userQuestionSubmission": "I tried Beef pho. Broth was amazing. The soup was spicy. Seating was limited. The street is too noisy."
+        },
+        {
+            "index": 1,
+            "locationId": "c871230b-43a8-4fa0-be7c-bce82442216f",
+            "locationName": "Bun Cha Obama",
+            "userMediaSubmission": [
+                "https://kkhkvzjpcnivhhutxled.supabase.co/storage/v1/object/sign/challenge/88c59643-d03e-466b-a64a-2eaba98d75d4/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=0/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=0_02828672f14ad20ee6a454b220ffcd70.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJjaGFsbGVuZ2UvODhjNTk2NDMtZDAzZS00NjZiLWE2NGEtMmVhYmE5OGQ3NWQ0L2UyZDM1N2JjLTAyNDMtNGI5Yy05YzVlLTBjMjk0MGZlZTU4N2lkPTAvZTJkMzU3YmMtMDI0My00YjljLTljNWUtMGMyOTQwZmVlNTg3aWQ9MF8wMjgyODY3MmYxNGFkMjBlZTZhNDU0YjIyMGZmY2Q3MC5qcGciLCJpYXQiOjE3MzYzMzU1MzUsImV4cCI6MTc2Nzg3MTUzNX0.LIx4kZcjAzp2xI_MHJ2dJwj25KeaKifs6KPOX_Wd2Ok",
+                "https://kkhkvzjpcnivhhutxled.supabase.co/storage/v1/object/sign/challenge/88c59643-d03e-466b-a64a-2eaba98d75d4/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=1/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=1_0c67973d2dc9b06d10784e2c4f06e25e.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJjaGFsbGVuZ2UvODhjNTk2NDMtZDAzZS00NjZiLWE2NGEtMmVhYmE5OGQ3NWQ0L2UyZDM1N2JjLTAyNDMtNGI5Yy05YzVlLTBjMjk0MGZlZTU4N2lkPTEvZTJkMzU3YmMtMDI0My00YjljLTljNWUtMGMyOTQwZmVlNTg3aWQ9MV8wYzY3OTczZDJkYzliMDZkMTA3ODRlMmM0ZjA2ZTI1ZS5qcGciLCJpYXQiOjE3MzYzMzU1NDEsImV4cCI6MTc2Nzg3MTU0MX0.BeOoue6jh7qEXS-vZY_TyTMEsOweHIo93-V-1hBq9uk",
+                "https://kkhkvzjpcnivhhutxled.supabase.co/storage/v1/object/sign/challenge/88c59643-d03e-466b-a64a-2eaba98d75d4/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=2/e2d357bc-0243-4b9c-9c5e-0c2940fee587id=2_e473989a489f57aa5e0c8b42896211fb.jpg?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1cmwiOiJjaGFsbGVuZ2UvODhjNTk2NDMtZDAzZS00NjZiLWE2NGEtMmVhYmE5OGQ3NWQ0L2UyZDM1N2JjLTAyNDMtNGI5Yy05YzVlLTBjMjk0MGZlZTU4N2lkPTIvZTJkMzU3YmMtMDI0My00YjljLTljNWUtMGMyOTQwZmVlNTg3aWQ9Ml9lNDczOTg5YTQ4OWY1N2FhNWUwYzhiNDI4OTYyMTFmYi5qcGciLCJpYXQiOjE3MzYzMzU1NDUsImV4cCI6MTc2Nzg3MTU0NX0.WJ6atZmZfa30oX3PeSHTJ1r_uCexvkv39dy3-8xxDyQ"
+            ],
+            "userQuestionSubmission": "The shop is too small. The taste is not my liking."
+        }
+    ]
+
+    tour_notes = []
+    for challenge in user_challenges:
+        str_to_pass = ";".join([
+            str(challenge["locationId"]),
+            challenge["locationName"],
+            challenge["userQuestionSubmission"]
+        ])
+        tour_notes.append(str_to_pass)
+        
+    story, cost = generator.generate_location_stories(tour_schedule, tour_notes)
+    print("Generated Story:", story)
+    print("Cost:", cost)
+    
+    # Example 2: From files
+    # story = generator.generate_story_from_file('tour_schedule.txt', 'tour_notes.txt')
+    # print(story)
