@@ -158,7 +158,7 @@ class TourStoryGenerator:
         location_notes: Descriptive notes about the location (plain text).
 
         Important Guidelines:
-        1. Generate one story for each location in the "Tour Notes." Treat each line in "Tour Notes" as a single location.
+        1. Generate one story for each location in the "Tour Notes." Treat each line in "Tour Notes" as a single location. IF THERE IS ONLY ONE LOCATION, MAKE SURE THE OUTPUT HAS ONLY ONE LOCATION AS WELL.
             Do not split or combine fields (location_id, location_name, location_notes) into separate locations.
             Use the semicolon (;) as a delimiter within each line, not between lines.
         2. Highlight the "location_notes" for each location – They’re the star! Don’t miss any key details from this section.
@@ -170,6 +170,7 @@ class TourStoryGenerator:
         Return the result as a JSON list, where each item is a dictionary with:
         - "locationId": The location ID from the "Tour Notes."
         - "story": A {story_length}-word creative story for the corresponding location.
+        This output can have ONLY ONE item if the tour notes only has one location.
 
         Example Output:
         [
