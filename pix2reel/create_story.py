@@ -148,12 +148,19 @@ class TourStoryGenerator:
         Tour Notes: {tour_notes}
 
         Notes Format:
-        Each line in "Tour Notes" corresponds to a single location and is formatted as:
+        Each line in "Tour Notes" corresponds to exactly one location and is formatted as:
         location_id;location_name;location_notes
-        Example: 1;Hanoi;Explored the bustling Old Quarter and sampled local street food.
+        Example:
+        8bdcbfb6-9b0e-4ca6-92b4-2a3061bbf6ea;Cho Ben Thanh;Ben Thanh photos
+
+        location_id: A unique identifier for the location (usually a UUID format).
+        location_name: The name of the location (plain text).
+        location_notes: Descriptive notes about the location (plain text).
 
         Important Guidelines:
-        1. Generate one story for each location in the "Tour Notes." 
+        1. Generate one story for each location in the "Tour Notes." Treat each line in "Tour Notes" as a single location.
+            Do not split or combine fields (location_id, location_name, location_notes) into separate locations.
+            Use the semicolon (;) as a delimiter within each line, not between lines.
         2. Highlight the "location_notes" for each location – They’re the star! Don’t miss any key details from this section.
         3. If there were any hiccups at a location, that’s okay! Share them, but always spin it into a positive or uplifting takeaway.
         4. Stick to the facts in the "Tour Schedule" and "location_notes" while keeping each story creative and exciting. Don’t go off-track!
