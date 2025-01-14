@@ -180,7 +180,7 @@ class TourStoryGenerator:
                     {"role": "system", "content": "You are a creative storyteller who can weave narratives from travel experiences."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=200*tour_notes.count("\n")  # Slightly higher to ensure we get close to 100 words
+                max_tokens=200*(tour_notes.count("\n")+1)  # Slightly higher to ensure we get close to 100 words
             )
             
             story = response.choices[0].message.content.strip()
