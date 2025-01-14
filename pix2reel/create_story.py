@@ -129,7 +129,7 @@ class TourStoryGenerator:
         
         return self.generate_tour_story(tour_schedule, tour_notes, story_length)
 
-    def generate_location_stories(self, tour_schedule: str, tour_notes: str, story_length: int = 100) -> str:
+    def generate_location_stories(self, tour_schedule: str, tour_notes: List[str], story_length: int = 100) -> str:
         """
         Generate each story for many locations.
         
@@ -147,20 +147,23 @@ class TourStoryGenerator:
         Tour Schedule: {tour_schedule}
         Tour Notes: {tour_notes}
 
-        Notes Format:
-        Each line in "Tour Notes" corresponds to exactly one location and is formatted as:
+        Tour Notes Format:
+        Tour Notes is provided as a list of strings. Each string corresponds to a single location and is formatted as:
         location_id;location_name;location_notes
         Example:
-        8bdcbfb6-9b0e-4ca6-92b4-2a3061bbf6ea;Cho Ben Thanh;Ben Thanh photos
+        [
+            "8bdcbfb6-9b0e-4ca6-92b4-2a3061bbf6ea;Cho Ben Thanh;Ben Thanh photos",
+            "d41d8cd9-8f00-3204-a980-98ef41c8e308;Notre Dame Cathedral;Visited the iconic church"
+        ]
 
         location_id: A unique identifier for the location (usually a UUID format).
         location_name: The name of the location (plain text).
         location_notes: Descriptive notes about the location (plain text).
 
         Important Guidelines:
-        1. Generate one story for each location in the "Tour Notes." Treat each line in "Tour Notes" as a single location. IF THERE IS ONLY ONE LOCATION, MAKE SURE THE OUTPUT HAS ONLY ONE LOCATION AS WELL.
+        1. Generate one story for each location in the "Tour Notes." Treat each item in "Tour Notes" as a single location. IF THERE IS ONLY ONE LOCATION, MAKE SURE THE OUTPUT HAS ONLY ONE LOCATION AS WELL.
             Do not split or combine fields (location_id, location_name, location_notes) into separate locations.
-            Use the semicolon (;) as a delimiter within each line, not between lines.
+            Use the semicolon (;) as a delimiter within each item, not between two different items in the list.
         2. Highlight the "location_notes" for each location – They’re the star! Don’t miss any key details from this section.
         3. If there were any hiccups at a location, that’s okay! Share them, but always spin it into a positive or uplifting takeaway.
         4. Stick to the facts in the "Tour Schedule" and "location_notes" while keeping each story creative and exciting. Don’t go off-track!
@@ -168,7 +171,7 @@ class TourStoryGenerator:
 
         Output Format:
         Return the result as a JSON list, where each item is a dictionary with:
-        - "locationId": The location ID from the "Tour Notes."
+        - "locationId": The location_id from the "Tour Notes."
         - "story": A {story_length}-word creative story for the corresponding location.
         This output can have ONLY ONE item if the tour notes only has one location.
 
