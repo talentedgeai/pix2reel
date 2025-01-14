@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="pix2reel",               # Name of your library
-    version="0.1.0",                 # Library version
+    version="0.2.0",                 # Library version
     author="Khang Nguyen",              # Your name or organization
     author_email="khang.nguyen@talentedge.ai",  # Your email
     description="A library to generate reels from images",  # Short description
